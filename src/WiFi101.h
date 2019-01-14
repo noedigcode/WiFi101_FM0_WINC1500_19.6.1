@@ -102,6 +102,13 @@ public:
 	uint8_t begin(const String &ssid, uint8_t key_idx, const String &key) { return begin(ssid.c_str(), key_idx, key.c_str()); }
 	uint8_t begin(const String &ssid, const String &key) { return begin(ssid.c_str(), key.c_str()); }
 
+	/* (GVDK 2019-01-14) Start WPA WiFi connection based on SSID and BSSID.
+	 * ssid:  String containing SSID.
+	 * passw: String containing network pass phrase.
+	 * bssid: Array of 6 bytes representing BSSID.
+	 */
+	uint8_t beginBSSID(const char *ssid, const char *passw, const char* bssid);
+
 	/* Start Wifi in Access Point, with open security.
 	 * Only one client can connect to the AP at a time.
 	 *

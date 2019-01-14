@@ -479,6 +479,58 @@ Serial.println(_status);
 	return _status;
 }
 
+/* (GVDK 2019-01-14) Start WPA WiFi connection based on SSID and BSSID.
+ * ssid:  String containing SSID.
+ * passw: String containing network pass phrase.
+ * bssid: Array of 6 bytes representing BSSID.
+ */
+uint8_t WiFiClass::beginBSSID(const char *ssid, const char *passw, const char* bssid)
+{
+	if (!_init) {
+		init();
+	}
+	
+	// Connect to router:
+	if (_dhcp) {
+		_localip = 0;
+		_submask = 0;
+		_gateway = 0;
+	}
+
+	tstrNetworkId nid;
+	nid.pu8Ssid = (uint8*)ssid;
+	nid.pu8Bssid = (uint8*)bssid;
+	nid.u8SsidLen = strlen(ssid);
+	nid.enuChannel = M2M_WIFI_CH_ALL;
+
+	tstrAuthPsk psk;
+	psk.pu8Psk = NULL;
+	psk.pu8Passphrase = (uint8*)passw;
+	psk.u8PassphraseLen = strlen(passw);
+
+	if (m2m_wifi_connect_psk(WIFI_CRED_DONTSAVE, &nid, &psk) < 0) {
+		_status = WL_CONNECT_FAILED;
+		return _status;
+	}
+	_status = WL_IDLE_STATUS;
+	_mode = WL_STA_MODE;
+
+	// Wait for connection or timeout:
+	unsigned long start = millis();
+	while (!(_status & WL_CONNECTED) &&
+			!(_status & WL_DISCONNECTED) &&
+			millis() - start < 60000) {
+		m2m_wifi_handle_events(NULL);
+	}
+	if (!(_status & WL_CONNECTED)) {
+		_mode = WL_RESET_MODE;
+	}
+
+	memset(_ssid, 0, M2M_MAX_SSID_LEN);
+	memcpy(_ssid, ssid, strlen(ssid));
+	return _status;
+}
+
 uint8_t WiFiClass::startConnect(const char *ssid, uint8_t u8SecType, const void *pvAuthInfo)
 {
 	if (!_init) {
